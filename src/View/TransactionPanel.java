@@ -95,10 +95,103 @@ public class TransactionPanel extends JPanel {
         btnRefresh.addActionListener(e -> loadComboBoxData());
 
         // 2. Nút Thêm vào giỏ
+        // 2. Nút Thêm vào giỏ
         btnAdd.addActionListener(e -> addToCart());
+        
+        // 3. Nút Thanh Toán
+        btnPay.addActionListener(e -> processPayment());
 
         // Load lần đầu
         loadComboBoxData();
+    }
+
+    private void processPayment() {
+        if (model.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Giỏ hàng đang trống!");
+            return;
+        }
+
+        Customer cust = (Customer) cboCustomer.getSelectedItem();
+        if (cust == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng!");
+            return;
+        }
+
+        // Tính tổng tiền
+        double totalAmount = 0;
+        for (int i = 0; i < model.getRowCount(); i++) {
+            totalAmount += Double.parseDouble(model.getValueAt(i, 3).toString().replace(",", ""));
+        }
+
+        // Hỏi số tiền khách đưa
+        String input = JOptionPane.showInputDialog(this, 
+            "Tổng tiền: " + String.format("%,.0f", totalAmount) + " VNĐ\nKhách đưa bao nhiêu?", 
+            String.format("%.0f", totalAmount));
+            
+        if (input == null) return; // Hủy bỏ
+
+        try {
+            double paid = Double.parseDouble(input.replace(",", ""));
+            if (paid < 0) throw new NumberFormatException();
+
+            // Tạo danh sách chi tiết
+            java.util.List<Product> details = new java.util.ArrayList<>();
+            for (int i = 0; i < model.getRowCount(); i++) {
+                String name = model.getValueAt(i, 0).toString();
+                int qty = Integer.parseInt(model.getValueAt(i, 2).toString());
+                
+                // Vì bảng không lưu ID, ta phải tìm lại ID từ tên (hoặc lưu ID ẩn trong model).
+                // Cách đơn giản nhất hiện tại: Lấy ID từ ComboBox (nhưng rủi ro nếu user đổi selection)
+                // -> FIX: Tìm trong danh sách Product của ComboBox xem cái nào trùng tên.
+                // Để an toàn và nhanh, ta sẽ tìm trong ProductDAO hoặc loop qua ComboBox.
+                // Ở đây demo loop qua ComboBox items (lưu ý hiệu năng nếu list lớn)
+                String prodId = "";
+                double priceOut = 0;
+                
+                for(int j=0; j< cboProduct.getItemCount(); j++) {
+                     Product p = cboProduct.getItemAt(j);
+                     if(p.getName().equals(name)) {
+                         prodId = p.getId();
+                         priceOut = p.getPriceOut();
+                         break;
+                     }
+                }
+                
+                if(!prodId.isEmpty()) {
+                    Product p = new Product();
+                    p.setId(prodId);
+                    p.setQuantity(qty);
+                    p.setPriceOut(priceOut);
+                    details.add(p);
+                }
+            }
+
+            // Gọi DAO
+            Dao.TransactionDAO transDao = new Dao.TransactionDAO();
+            if (transDao.createInvoice(cust.getId(), details, paid)) {
+                StringBuilder msg = new StringBuilder("Thanh toán thành công!\n");
+                msg.append("Tổng tiền: ").append(String.format("%,.0f", totalAmount)).append("\n");
+                msg.append("Khách đưa: ").append(String.format("%,.0f", paid)).append("\n");
+                
+                if (paid >= totalAmount) {
+                    msg.append("Tiền thừa: ").append(String.format("%,.0f", paid - totalAmount));
+                } else {
+                    msg.append("Nợ lại: ").append(String.format("%,.0f", totalAmount - paid));
+                    msg.append("\n(Đã cộng vào công nợ khách hàng)");
+                }
+                
+                JOptionPane.showMessageDialog(this, msg.toString());
+                
+                // Clear giỏ hàng
+                model.setRowCount(0);
+                updateTotal();
+            } else {
+                JOptionPane.showMessageDialog(this, "Lỗi khi lưu hóa đơn!");
+            }
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Số tiền không hợp lệ!");
+        }
     }
 
     // Hàm tải dữ liệu vào ComboBox
