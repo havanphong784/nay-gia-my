@@ -77,9 +77,13 @@ public class TransactionDAO {
                 double total = 0;
                 for (Product p : details) total += p.getPriceOut() * p.getQuantity();
 
+                // Xử lý làm tròn số học để tránh lỗi sai số double (VND thường không có xu)
+                double totalRounded = Math.round(total); 
+                
                 psInvoice.setInt(1, customerId);
-                psInvoice.setDouble(2, total);
-                psInvoice.setString(3, paidAmount >= total ? "Đủ" : "Nợ");
+                psInvoice.setDouble(2, total); // Vẫn lưu tổng chính xác
+                // So sánh mềm dẻo hơn: Nếu trả thiếu dưới 10đ thì vẫn coi là Đủ
+                psInvoice.setString(3, paidAmount >= totalRounded - 10 ? "Đủ" : "Nợ");
                 psInvoice.executeUpdate();
 
                 int invoiceId = 0;
@@ -102,7 +106,8 @@ public class TransactionDAO {
                 psStock.executeBatch();
 
                 double debt = total - paidAmount;
-                if (debt > 0) {
+                // Chỉ cập nhật nợ nếu nợ thực sự lớn hơn 10đ (tránh rác)
+                if (debt > 10) {
                     try (PreparedStatement psDebt = conn.prepareStatement(sqlUpdateDebt)) {
                         psDebt.setDouble(1, debt);
                         psDebt.setInt(2, customerId);
@@ -141,5 +146,28 @@ public class TransactionDAO {
             e.printStackTrace();
         }
         return stats;
+    }
+    // --- 4. LẤY LỊCH SỬ HÓA ĐƠN ---
+    public java.util.List<Object[]> getAllInvoices() {
+        java.util.List<Object[]> list = new java.util.ArrayList<>();
+        String sql = "SELECT i.Id, c.Name, i.TotalAmount, i.PayMethod, i.Id " + // i.Id giả lập ngày nếu chưa có cột Date
+                     "FROM Invoices i LEFT JOIN Customers c ON i.CustomerId = c.Id ORDER BY i.Id DESC";
+                     
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+             
+             while(rs.next()) {
+                 list.add(new Object[] {
+                     rs.getInt(1), // ID
+                     rs.getString(2), // Customer Name
+                     rs.getDouble(3), // Total
+                     rs.getString(4)  // Pay Method
+                 });
+             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

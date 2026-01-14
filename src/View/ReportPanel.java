@@ -78,7 +78,7 @@ public class ReportPanel extends JPanel {
         JLabel lblSystemInfo = createValueLabel();
         lblSystemInfo.setText("v1.0.0");
         JLabel lblDev = createSubLabel();
-        lblDev.setText("Dev: Thang_em");
+        lblDev.setText("Dev: Gia Mi");
         
         addContentToCard(cardInfo, lblSystemInfo, lblDev, null);
 

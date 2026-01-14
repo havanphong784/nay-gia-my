@@ -10,7 +10,7 @@ public class TestConnection {
 
         // Kiểm tra lần nữa
         if (conn != null) {
-            System.out.println(">>> TEST: ĐÃ KẾT NỐI TỚI DATABASE QL_KHO_VLXD");
+            System.out.println(">>> TEST: ĐÃ KẾT NỐI TỚI DATABASE QL_Kho_Vat_Lieu");
         } else {
             System.out.println(">>> TEST: KẾT NỐI THẤT BẠI!");
         }
