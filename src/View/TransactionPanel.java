@@ -144,10 +144,26 @@ public class TransactionPanel extends JPanel {
         modelHistory.setRowCount(0);
         List<Object[]> list = transDao.getAllInvoices();
         for(Object[] row : list) {
-            // Format tien
+            // Row components: [0]Id, [1]Customer, [2]Total, [3]Status, [4]PaidAmount
             double total = (Double) row[2];
-            row[2] = String.format("%,.0f VNĐ", total);
-            modelHistory.addRow(row);
+            double paid = 0;
+            if (row.length > 4 && row[4] != null) { // Check if PaidAmount exists
+                paid = (Double) row[4];
+            }
+            
+            String status = (String) row[3];
+            // Format Total
+            String totalStr = String.format("%,.0f VNĐ", total);
+            
+            // Format Status with Debt Amount
+            if ("Nợ".equals(status)) {
+                double debt = total - paid;
+                status = "Nợ (" + String.format("%,.0f", debt) + ")";
+            }
+
+            modelHistory.addRow(new Object[]{
+                row[0], row[1], totalStr, status
+            });
         }
     }
 

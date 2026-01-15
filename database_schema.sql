@@ -74,6 +74,7 @@ CREATE TABLE Invoices (
     Id INT IDENTITY(1,1) PRIMARY KEY,
     CustomerId INT FOREIGN KEY REFERENCES Customers(Id),
     TotalAmount FLOAT,
+    PaidAmount FLOAT DEFAULT 0, -- Số tiền khách thực trả
     PayMethod NVARCHAR(20), -- 'Đủ' hoặc 'Nợ'
     CreatedAt DATETIME DEFAULT GETDATE()
 );

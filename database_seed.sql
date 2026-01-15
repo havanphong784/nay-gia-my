@@ -62,28 +62,28 @@ INSERT INTO Products (Id, Name, CategoryId, Unit, PriceIn, PriceOut, Quantity) V
 
 
 -- 5. TẠO HÓA ĐƠN LỊCH SỬ (Invoices)
--- Đơn 1: CTY Đại Phát mua nhiều
-INSERT INTO Invoices (CustomerId, TotalAmount, PayMethod, CreatedAt) VALUES (2, 28000000, N'Nợ', DATEADD(day, -5, GETDATE()));
+-- Đơn 1: CTY Đại Phát mua nhiều - Nợ hết
+INSERT INTO Invoices (CustomerId, TotalAmount, PaidAmount, PayMethod, CreatedAt) VALUES (2, 28000000, 0, N'Nợ', DATEADD(day, -5, GETDATE()));
 -- Chi tiết đơn 1
 INSERT INTO InvoiceDetails (InvoiceId, ProductId, Quantity, Price) VALUES (1, 'TP-D16', 100, 280000);
 
--- Đơn 2: Khách A mua gạch cát
-INSERT INTO Invoices (CustomerId, TotalAmount, PayMethod, CreatedAt) VALUES (1, 5650000, N'Đủ', DATEADD(day, -3, GETDATE()));
+-- Đơn 2: Khách A mua gạch cát - Đủ
+INSERT INTO Invoices (CustomerId, TotalAmount, PaidAmount, PayMethod, CreatedAt) VALUES (1, 5650000, 5650000, N'Đủ', DATEADD(day, -3, GETDATE()));
 INSERT INTO InvoiceDetails (InvoiceId, ProductId, Quantity, Price) VALUES (2, 'G-ONG4', 1000, 1300); -- 1.3tr
 INSERT INTO InvoiceDetails (InvoiceId, ProductId, Quantity, Price) VALUES (2, 'C-XAY', 5, 450000);  -- 2.25tr
 INSERT INTO InvoiceDetails (InvoiceId, ProductId, Quantity, Price) VALUES (2, 'XM01', 20, 92000);   -- 1.84tr
 
--- Đơn 3: Khách vãng lai mua lẻ
-INSERT INTO Invoices (CustomerId, TotalAmount, PayMethod, CreatedAt) VALUES (9, 137000, N'Đủ', DATEADD(day, -2, GETDATE()));
+-- Đơn 3: Khách vãng lai mua lẻ - Đủ
+INSERT INTO Invoices (CustomerId, TotalAmount, PaidAmount, PayMethod, CreatedAt) VALUES (9, 137000, 137000, N'Đủ', DATEADD(day, -2, GETDATE()));
 INSERT INTO InvoiceDetails (InvoiceId, ProductId, Quantity, Price) VALUES (3, 'XM01', 1, 92000);
 INSERT INTO InvoiceDetails (InvoiceId, ProductId, Quantity, Price) VALUES (3, 'ONG-27', 1, 45000);
 
--- Đơn 4: Thầu Cường mua sơn
-INSERT INTO Invoices (CustomerId, TotalAmount, PayMethod, CreatedAt) VALUES (4, 5800000, N'Đủ', DATEADD(day, -1, GETDATE()));
+-- Đơn 4: Thầu Cường mua sơn - Nợ 1 phần (Tổng 5.8tr, Trả 800k, Nợ 5tr)
+INSERT INTO Invoices (CustomerId, TotalAmount, PaidAmount, PayMethod, CreatedAt) VALUES (4, 5800000, 800000, N'Nợ', DATEADD(day, -1, GETDATE()));
 INSERT INTO InvoiceDetails (InvoiceId, ProductId, Quantity, Price) VALUES (4, 'SON-DL18', 2, 2900000);
 
--- Đơn 5: Mới sáng nay
-INSERT INTO Invoices (CustomerId, TotalAmount, PayMethod, CreatedAt) VALUES (3, 22000, N'Đủ', GETDATE());
+-- Đơn 5: Mới sáng nay - Đủ
+INSERT INTO Invoices (CustomerId, TotalAmount, PaidAmount, PayMethod, CreatedAt) VALUES (3, 22000, 22000, N'Đủ', GETDATE());
 INSERT INTO InvoiceDetails (InvoiceId, ProductId, Quantity, Price) VALUES (5, 'THP-D6', 1, 22000);
 
 GO

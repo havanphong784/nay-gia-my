@@ -61,7 +61,7 @@ public class TransactionDAO {
 
     // --- 2. CHỨC NĂNG BÁN HÀNG (INVOICE) ---
     public boolean createInvoice(int customerId, List<Product> details, double paidAmount) {
-        String sqlInvoice = "INSERT INTO Invoices (CustomerId, TotalAmount, PayMethod) VALUES (?, ?, ?)";
+        String sqlInvoice = "INSERT INTO Invoices (CustomerId, TotalAmount, PaidAmount, PayMethod) VALUES (?, ?, ?, ?)";
         String sqlDetail = "INSERT INTO InvoiceDetails (InvoiceId, ProductId, Quantity, Price) VALUES (?, ?, ?, ?)";
         String sqlUpdateStock = "UPDATE Products SET Quantity = Quantity - ? WHERE Id = ?";
         String sqlUpdateDebt = "UPDATE Customers SET Debt = Debt + ? WHERE Id = ?";
@@ -81,9 +81,9 @@ public class TransactionDAO {
                 double totalRounded = Math.round(total); 
                 
                 psInvoice.setInt(1, customerId);
-                psInvoice.setDouble(2, total); // Vẫn lưu tổng chính xác
-                // So sánh mềm dẻo hơn: Nếu trả thiếu dưới 10đ thì vẫn coi là Đủ
-                psInvoice.setString(3, paidAmount >= totalRounded - 10 ? "Đủ" : "Nợ");
+                psInvoice.setDouble(2, total);
+                psInvoice.setDouble(3, paidAmount); // PaidAmount
+                psInvoice.setString(4, paidAmount >= totalRounded - 10 ? "Đủ" : "Nợ");
                 psInvoice.executeUpdate();
 
                 int invoiceId = 0;
@@ -150,7 +150,7 @@ public class TransactionDAO {
     // --- 4. LẤY LỊCH SỬ HÓA ĐƠN ---
     public java.util.List<Object[]> getAllInvoices() {
         java.util.List<Object[]> list = new java.util.ArrayList<>();
-        String sql = "SELECT i.Id, c.Name, i.TotalAmount, i.PayMethod, i.Id " + // i.Id giả lập ngày nếu chưa có cột Date
+        String sql = "SELECT i.Id, c.Name, i.TotalAmount, i.PayMethod, i.PaidAmount " + // Thay id cuoi = PaidAmount
                      "FROM Invoices i LEFT JOIN Customers c ON i.CustomerId = c.Id ORDER BY i.Id DESC";
                      
         try (Connection conn = DBConnection.getConnection();
@@ -162,7 +162,8 @@ public class TransactionDAO {
                      rs.getInt(1), // ID
                      rs.getString(2), // Customer Name
                      rs.getDouble(3), // Total
-                     rs.getString(4)  // Pay Method
+                     rs.getString(4), // Pay Method
+                     rs.getDouble(5)  // Paid Amount
                  });
              }
         } catch (Exception e) {
